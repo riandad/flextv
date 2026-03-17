@@ -24,7 +24,7 @@
 
         h1 { font-size: 28px; color: var(--flex-pink); margin: 5px 0; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
 
-        /* 상단 대시보드 및 컨트롤 */
+        /* 상단 대시보드 */
         .dashboard { background: rgba(0, 0, 0, 0.7); padding: 10px 20px; border-radius: 50px; border: 2px solid var(--flex-purple); margin-bottom: 10px; display: flex; gap: 20px; align-items: center; }
         .stat-item { font-size: 16px; }
         .stat-item strong { color: var(--gold); }
@@ -60,6 +60,10 @@
         .cell.win-text { font-size: 11px; text-shadow: 0 0 3px #000; }
         .cell.miss-text { color: var(--red) !important; font-size: 9px; }
         .highlight { background: #fff !important; color: #000 !important; transform: scale(1.3); z-index: 10; border-radius: 50%; }
+
+        /* 결과보기 로그 박스 */
+        .log-box { width: 90%; max-width: 1200px; margin-top: 20px; background: rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 10px; padding: 15px; height: 120px; overflow-y: auto; text-align: left; font-size: 13px; }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px dotted #222; padding-bottom: 2px; }
 
         #effectOverlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); z-index: 10000; padding: 30px; border-radius: 20px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; text-align: center; }
         #effectOverlay.show { transform: translate(-50%, -50%) scale(1); }
@@ -104,6 +108,10 @@
         </div>
     </div>
 
+    <div class="log-box" id="logBox">
+        <div style="color:var(--flex-pink); font-weight:bold; margin-bottom:5px; border-bottom:1px solid #333;">📑 결과 히스토리</div>
+    </div>
+
     <div id="effectOverlay"></div>
     <audio id="tickSnd" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
@@ -115,8 +123,8 @@
     const tickSnd = document.getElementById("tickSnd");
 
     function init() {
-        const savedBoard = localStorage.getItem("flextv_puzzle_final");
-        const savedStats = localStorage.getItem("flextv_stats_final");
+        const savedBoard = localStorage.getItem("f_v3_board");
+        const savedStats = localStorage.getItem("f_v3_stats");
         
         if (savedBoard) rewards = JSON.parse(savedBoard);
         else resetRewards();
@@ -133,7 +141,7 @@
         let temp = [...Array(1).fill("🥇 1등"), ...Array(3).fill("🥈 2등"), ...Array(15).fill("🥉 3등"), ...Array(80).fill("🏅 4등")];
         while (temp.length < TOTAL) temp.push("❌ 꽝");
         rewards = temp.sort(() => Math.random() - 0.5);
-        localStorage.setItem("flextv_puzzle_final", JSON.stringify(rewards));
+        localStorage.setItem("f_v3_board", JSON.stringify(rewards));
     }
 
     function addUser() {
@@ -173,6 +181,7 @@
         userStats[activeUser]++;
         
         saveAll();
+        addHistoryLog(activeUser, idx + 1, result); // 히스토리에 기록
 
         if (!result.includes("꽝")) {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
@@ -184,6 +193,16 @@
         renderBoard();
         updateLeaderboard();
         updateStats();
+    }
+
+    function addHistoryLog(user, num, res) {
+        const logBox = document.getElementById("logBox");
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        const time = new Date().toLocaleTimeString();
+        const color = res.includes("꽝") ? "#888" : "var(--gold)";
+        entry.innerHTML = `<span style="color:#666">[${time}]</span> <span style="color:var(--flex-pink)"><b>${user}</b></span> 님이 <span style="font-weight:bold">${num}번</span>을 뽑았습니다. 👉 <span style="color:${color}">${res}</span>`;
+        logBox.prepend(entry);
     }
 
     function startRoulette() {
@@ -248,12 +267,12 @@
     }
 
     function saveAll() {
-        localStorage.setItem("flextv_puzzle_final", JSON.stringify(rewards));
-        localStorage.setItem("flextv_stats_final", JSON.stringify(userStats));
+        localStorage.setItem("f_v3_board", JSON.stringify(rewards));
+        localStorage.setItem("f_v3_stats", JSON.stringify(userStats));
     }
 
     function resetBoard() {
-        if (confirm("완전히 초기화할까요? (리더보드 기록은 유지됩니다)")) {
+        if (confirm("판을 초기화할까요? (리더보드 기록은 유지됩니다)")) {
             resetRewards();
             location.reload();
         }
