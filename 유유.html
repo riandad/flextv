@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX TV 김유유♥ 뽑기판 (둥근 디자인)</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --flex-purple: #6a11cb;
+            --flex-pink: #ff00ea;
+            --gold: #ffcc00;
+            --red: #ff3333;
+            --bg: #121212;
+            --hidden-image: url('https://nwqkk6zh13414.edge.naverncp.com/board/579442/19g61m72eb5m5.jpg'); 
+        }
+
+        body { 
+            background-color: var(--bg); color: white; 
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+        
+        h1 { font-size: 32px; color: var(--flex-pink); text-shadow: 2px 2px 10px rgba(0,0,0,0.8); margin: 10px 0; }
+
+        .dashboard { 
+            background: rgba(0, 0, 0, 0.7); padding: 10px 25px; 
+            border-radius: 50px; margin-bottom: 15px; border: 2px solid var(--flex-purple);
+        }
+        .stat-item { display: inline-block; margin: 0 15px; font-size: 18px; }
+        .stat-item strong { color: var(--gold); font-size: 22px; }
+
+        .controls { margin-bottom: 15px; }
+        input { background: #000; border: 2px solid var(--flex-purple); color: white; padding: 8px; border-radius: 5px; width: 70px; text-align: center; font-size: 16px; }
+        button { padding: 8px 20px; font-weight: bold; border-radius: 5px; border: none; cursor: pointer; margin: 0 5px; font-size: 16px; }
+        .btn-pick { background: var(--flex-purple); color: white; }
+        .btn-random { background: var(--flex-pink); color: white; }
+        .btn-reset { background: #333; color: #888; font-size: 12px; padding: 5px 10px; }
+
+        #board { 
+            display: grid; 
+            grid-template-columns: repeat(26, 1fr); 
+            gap: 1px; /* 간격을 살짝 넓혀서 둥근 모양이 더 잘 보이게 함 */
+            width: 95vw; max-width: 1400px; 
+            padding: 15px; 
+            background-image: var(--hidden-image); 
+            background-size: cover;
+            background-position: center;
+            border-radius: 15px;
+            position: relative;
+            background-color: #000;
+        }
+
+        /* [변경 포인트] 동글동글한 버튼 디자인 */
+        .cell { 
+            aspect-ratio: 1/1; 
+            background: #d98282; 
+            color: #fff5f5; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            border-radius: 11px; /* 모서리를 둥글게 */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2); /* 약간의 입체감 */
+        }
+
+        .cell:hover { 
+            background: #ff9999; 
+            color: white; 
+            transform: scale(1.15); 
+            z-index: 5; 
+            border-color: var(--flex-pink);
+            border-radius: 12px; /* 호버 시 더 동그랗게 */
+        }
+
+        .cell.open { 
+            background: rgba(0, 0, 0, 0.1) !important; 
+            cursor: default;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px; /* 열린 뒤에는 사진을 더 많이 보여주기 위해 덜 둥글게 */
+            box-shadow: none;
+        }
+
+        .cell.win-text { color: white !important; font-size: 14px; font-weight: 800; text-shadow: 0 0 5px #000; }
+        .cell.win-1 { background: rgba(255, 204, 0, 0.6) !important; border: 2px solid var(--gold) !important; box-shadow: 0 0 15px var(--gold); }
+        .cell.win-2 { background: rgba(255, 0, 234, 0.5) !important; border: 2px solid var(--flex-pink) !important; }
+        .cell.win-3 { color: var(--gold) !important; }
+
+        .cell.miss-text {
+            color: var(--red) !important;
+            font-size: 10px;
+            font-weight: 900;
+            background: rgba(0, 0, 0, 0.1) !important;
+            text-shadow: 0 0 3px #000;
+        }
+
+        .highlight { background: #fff !important; color: #000 !important; transform: scale(1.2); z-index: 10; box-shadow: 0 0 20px #fff; border-radius: 50%; }
+
+        #effectOverlay { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); 
+            z-index: 10000; padding: 40px 60px; border-radius: 30px; text-align: center; 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        #effectOverlay.show { transform: translate(-50%, -50%) scale(1); }
+        .msg-win { background: rgba(0,0,0,0.95); border: 4px solid var(--gold); color: var(--gold); font-size: 50px; font-weight: bold; }
+        .msg-miss { background: rgba(0,0,0,0.85); border: 2px solid var(--red); color: var(--red); font-size: 40px; }
+        .msg-error { background: #900; border: 3px solid white; color: white; font-size: 30px; font-weight: bold; }
+
+        .log-box { width: 90%; max-width: 800px; margin: 20px auto; text-align: left; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; height: 120px; overflow-y: auto; border: 1px solid #333; font-size: 14px; color: #ccc; }
+    </style>
+</head>
+<body>
+
+    <h1>🧩 FLEX TV 김유유♥ 뽑기판</h1>
+
+    <div class="dashboard">
+        <div class="stat-item">남은 칸: <strong id="totalLeft">520</strong></div>
+        <div class="stat-item">1등: <strong id="cnt1">1</strong> / 2등: <strong id="cnt2">3</strong> / 3등: <strong id="cnt3">15</strong></div>
+    </div>
+
+    <div class="controls">
+        <input id="targetNum" type="number" placeholder="번호" min="1" max="520">
+        <button class="btn-pick" onclick="manualPick()">뽑기</button>
+        <button class="btn-random" onclick="startRoulette()">🎲 랜덤</button>
+        <button class="btn-reset" onclick="resetBoard()">초기화</button>
+    </div>
+
+    <div id="board"></div>
+    <div class="log-box" id="logs"></div>
+    <div id="effectOverlay"></div>
+
+    <audio id="tickSnd" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+<script>
+    let rewards = [];
+    const TOTAL = 520;
+    const overlay = document.getElementById("effectOverlay");
+    const tickSnd = document.getElementById("tickSnd");
+
+    function init() {
+        const saved = localStorage.getItem("flextv_puzzle_v2");
+        if (saved) {
+            rewards = JSON.parse(saved);
+        } else {
+            let temp = [...Array(1).fill("🥇 1등"), ...Array(3).fill("🥈 2등"), ...Array(15).fill("🥉 3등"), ...Array(80).fill("🏅 4등")];
+            while (temp.length < TOTAL) temp.push("❌ 꽝");
+            rewards = temp.sort(() => Math.random() - 0.5);
+            localStorage.setItem("flextv_puzzle_v2", JSON.stringify(rewards));
+        }
+        render();
+        updateStats();
+    }
+
+    function render() {
+        const board = document.getElementById("board");
+        board.innerHTML = "";
+        rewards.forEach((res, i) => {
+            const div = document.createElement("div");
+            div.className = "cell";
+            if (res.startsWith("O_")) {
+                div.classList.add("open");
+                const val = res.replace("O_", "");
+                if(val.includes("꽝")) {
+                    div.innerText = "꽝";
+                    div.classList.add("miss-text");
+                } else {
+                    const rank = val.split(" ")[1];
+                    div.innerText = rank;
+                    div.classList.add("win-text");
+                    if(rank === "1등") div.classList.add("win-1");
+                    else if(rank === "2등") div.classList.add("win-2");
+                    else if(rank === "3등") div.classList.add("win-3");
+                }
+            } else {
+                div.innerText = i + 1;
+                div.onclick = () => openCell(i);
+            }
+            board.appendChild(div);
+        });
+    }
+
+    function openCell(idx) {
+        if (rewards[idx].startsWith("O_")) {
+            showPopup("이미 뽑은 번호입니다! ⚠️", "error");
+            return;
+        }
+        const result = rewards[idx];
+        rewards[idx] = "O_" + result;
+        localStorage.setItem("flextv_puzzle_v2", JSON.stringify(rewards));
+        
+        if (!result.includes("꽝")) {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.7 }, colors: ['#ff00ea', '#6a11cb', '#ffcc00'] });
+            showPopup(result + " 당첨! 🎉", "win");
+        } else {
+            showPopup("냠!", "miss");
+        }
+        addLog(idx + 1, result);
+        render();
+        updateStats();
+    }
+
+    function startRoulette() {
+        let avail = [];
+        rewards.forEach((r, i) => { if (!r.startsWith("O_")) avail.push(i); });
+        if (avail.length === 0) return;
+        let count = 0, spins = 20;
+        const cells = document.querySelectorAll(".cell");
+        const timer = setInterval(() => {
+            document.querySelectorAll(".highlight").forEach(c => c.classList.remove("highlight"));
+            let rIdx = avail[Math.floor(Math.random() * avail.length)];
+            cells[rIdx].classList.add("highlight");
+            tickSnd.currentTime = 0; tickSnd.play().catch(()=>{});
+            if (++count > spins) { clearInterval(timer); openCell(rIdx); }
+        }, 60);
+    }
+
+    function showPopup(msg, type) {
+        overlay.innerText = msg;
+        overlay.className = "show " + (type === "win" ? "msg-win" : type === "miss" ? "msg-miss" : "msg-error");
+        setTimeout(() => overlay.classList.remove("show"), 1500);
+    }
+
+    function updateStats() {
+        document.getElementById("totalLeft").innerText = rewards.filter(r => !r.startsWith("O_")).length;
+        document.getElementById("cnt1").innerText = rewards.filter(r => r === "🥇 1등").length;
+        document.getElementById("cnt2").innerText = rewards.filter(r => r === "🥈 2등").length;
+    }
+
+    function addLog(num, res) {
+        const log = document.getElementById("logs");
+        const entry = document.createElement("div");
+        entry.style.color = res.includes("꽝") ? "var(--red)" : "var(--gold)";
+        entry.innerHTML = `[${new Date().toLocaleTimeString()}] <b>${num}번</b> 결과 👉 ${res}`;
+        log.prepend(entry);
+    }
+
+    function manualPick() {
+        const val = parseInt(document.getElementById("targetNum").value);
+        if (val >= 1 && val <= TOTAL) {
+            openCell(val - 1);
+        } else {
+            showPopup("1~520 사이의 번호를 입력하세요!", "error");
+        }
+        document.getElementById("targetNum").value = "";
+    }
+
+    function resetBoard() {
+        if (confirm("새 게임을 시작할까요? 사진이 다시 가려집니다.")) {
+            localStorage.removeItem("flextv_puzzle_v2");
+            location.reload();
+        }
+    }
+    init();
+</script>
+</body>
+</html>
