@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLEX TV 은빈ღ 맞춤 상품 뽑기판</title>
+    <title>FLEX TV 은빈ღ 가로 20칸 최적화 뽑기판</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -13,38 +13,45 @@
         }
 
         body { background-color: var(--bg); color: white; font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .top-banner { width: 100%; max-width: 1200px; height: 180px; background: var(--banner-image) no-repeat center/contain; margin-bottom: 10px; }
+        .top-banner { width: 100%; max-width: 1000px; height: 160px; background: var(--banner-image) no-repeat center/contain; margin-bottom: 5px; }
 
-        .settings-panel { background: rgba(30, 30, 30, 0.95); border: 2px solid var(--flex-purple); padding: 15px; border-radius: 15px; margin-bottom: 15px; width: 90%; max-width: 800px; display: none; z-index: 100; }
+        .settings-panel { background: rgba(30, 30, 30, 0.95); border: 2px solid var(--flex-purple); padding: 15px; border-radius: 15px; margin-bottom: 15px; width: 90%; max-width: 800px; display: none; z-index: 100; position: fixed; top: 100px; }
         .settings-panel.show { display: block; }
         .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
         .setting-input { background: #000; border: 1px solid #444; color: white; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; }
 
-        .dashboard { background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 50px; border: 2px solid var(--flex-purple); margin-bottom: 15px; display: flex; gap: 20px; align-items: center; }
-        .stat-item strong { color: var(--gold); font-size: 1.2em; }
+        .dashboard { background: rgba(0,0,0,0.7); padding: 8px 20px; border-radius: 50px; border: 2px solid var(--flex-purple); margin-bottom: 10px; display: flex; gap: 20px; align-items: center; }
+        .stat-item strong { color: var(--gold); font-size: 1.1em; }
 
-        .controls { margin-bottom: 15px; }
-        button { padding: 8px 18px; font-weight: bold; border-radius: 5px; border: none; cursor: pointer; margin: 0 5px; transition: 0.2s; }
+        .controls { margin-bottom: 10px; }
+        button { padding: 6px 15px; font-weight: bold; border-radius: 5px; border: none; cursor: pointer; margin: 0 3px; }
         .btn-set { background: #444; color: white; }
         .btn-pick { background: var(--flex-purple); color: white; }
         .btn-random { background: var(--flex-pink); color: white; }
 
-        .main-container { display: flex; width: 98vw; justify-content: center; gap: 10px; align-items: flex-start; }
-        .sidebar { width: 170px; background: rgba(0,0,0,0.85); border: 1px solid #333; border-radius: 10px; padding: 12px; height: 520px; overflow-y: auto; }
+        .main-container { display: flex; width: 98vw; justify-content: center; gap: 12px; align-items: flex-start; }
+        .sidebar { width: 160px; background: rgba(0,0,0,0.85); border: 1px solid #333; border-radius: 10px; padding: 10px; height: 600px; overflow-y: auto; }
         
-        /* 상품 현황판 스타일 */
-        .gift-status { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; margin-bottom: 15px; border: 1px solid #444; }
-        .gift-status-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: #bbb; }
+        .gift-status { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #444; }
+        .gift-status-item { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #bbb; }
         .gift-status-item strong { color: var(--gold); }
 
-        #board { display: grid; grid-template-columns: repeat(26, 1fr); gap: 1px; width: 68vw; background: var(--hidden-image) center/cover; padding: 5px; background-color: #000; border-radius: 5px; }
-        .cell { aspect-ratio: 1/1; background: #2d2d2d; color: #777; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.03); }
+        /* [수정] 가로 20칸 레이아웃 */
+        #board { 
+            display: grid; 
+            grid-template-columns: repeat(20, 1fr); /* 가로 20칸 */
+            gap: 1px; 
+            width: 55vw; /* 화면 비중을 적절히 조정 */
+            min-width: 650px;
+            background: var(--hidden-image) center/cover; padding: 4px; background-color: #000; border-radius: 5px; 
+        }
+        .cell { aspect-ratio: 1/1; background: #2d2d2d; color: #777; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.02); }
         .cell.open { background: rgba(0,0,0,0.3) !important; color: transparent; }
         .cell.win-text { color: white !important; font-size: 11px; text-shadow: 0 0 5px #000; font-weight: bold; }
+        .cell.miss-text { color: var(--red) !important; font-size: 9px; font-weight: 900; }
         .highlight { background: #fff !important; transform: scale(1.3); z-index: 10; border-radius: 50%; }
 
-        .log-box { width: 90%; max-width: 1100px; margin-top: 15px; background: rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 10px; padding: 15px; height: 100px; overflow-y: auto; font-size: 13px; }
-        
+        .log-box { width: 90%; max-width: 1000px; margin-top: 10px; background: rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 10px; padding: 10px; height: 90px; overflow-y: auto; font-size: 12px; }
         #effectOverlay { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0); z-index:9999; padding:40px; border-radius:20px; text-align:center; transition:0.3s; pointer-events:none; }
     </style>
 </head>
@@ -60,7 +67,7 @@
             <div>3등 상품: <input type="text" id="gift3" class="setting-input" value="🥉 3등"></div>
             <div>4등 상품: <input type="text" id="gift4" class="setting-input" value="🏅 4등"></div>
         </div>
-        <button onclick="saveSettings()" style="background:var(--flex-purple); color:white; width:100%;">설정 저장 및 반영</button>
+        <button onclick="saveSettings()" style="background:var(--flex-purple); color:white; width:100%; padding:10px;">저장</button>
     </div>
 
     <div class="dashboard">
@@ -69,31 +76,30 @@
     </div>
 
     <div class="controls">
-        <input id="targetNum" type="number" style="width:60px; padding:7px; background:#000; color:white; border:1px solid var(--flex-purple);" placeholder="번호">
+        <input id="targetNum" type="number" style="width:60px; padding:6px; background:#000; color:white; border:1px solid var(--flex-purple);" placeholder="번호">
         <button class="btn-pick" onclick="manualPick()">뽑기</button>
         <button class="btn-random" onclick="startRoulette()">🎲 랜덤</button>
-        <button class="btn-reset" onclick="resetBoard()" style="font-size:11px; background:#222; color:#666;">초기화</button>
+        <button class="btn-reset" onclick="resetBoard()" style="font-size:10px; background:#222; color:#555;">초기화</button>
     </div>
 
     <div class="main-container">
         <div class="sidebar">
-            <h4 style="text-align:center; color:var(--flex-pink); margin-top:0;">참여자</h4>
-            <input type="text" id="newUser" style="width:100%; background:#000; color:white; border:1px solid #444; margin-bottom:5px; padding:5px; box-sizing:border-box;" placeholder="닉네임" onkeypress="if(event.keyCode==13) addUser()">
+            <h4 style="text-align:center; color:var(--flex-pink); margin:0 0 5px 0;">참여자</h4>
+            <input type="text" id="newUser" style="width:100%; background:#000; color:white; border:1px solid #444; margin-bottom:5px; padding:4px;" placeholder="닉네임" onkeypress="if(event.keyCode==13) addUser()">
             <div id="userList"></div>
         </div>
 
         <div id="board"></div>
 
         <div class="sidebar">
-            <h4 style="text-align:center; color:var(--gold); margin-top:0;">🎁 상품 현황</h4>
+            <h4 style="text-align:center; color:var(--gold); margin:0 0 5px 0;">🎁 상품 현황</h4>
             <div class="gift-status">
                 <div class="gift-status-item"><span id="gName1">1등</span> <strong id="gCnt1">0</strong></div>
                 <div class="gift-status-item"><span id="gName2">2등</span> <strong id="gCnt2">0</strong></div>
                 <div class="gift-status-item"><span id="gName3">3등</span> <strong id="gCnt3">0</strong></div>
                 <div class="gift-status-item"><span id="gName4">4등</span> <strong id="gCnt4">0</strong></div>
             </div>
-            
-            <h4 style="text-align:center; color:var(--flex-pink); margin-top:10px;">🏆 TOP 5 횟수</h4>
+            <h4 style="text-align:center; color:var(--flex-pink); margin:10px 0 5px 0;">🏆 TOP 5</h4>
             <div id="leaderboard"></div>
         </div>
     </div>
@@ -112,8 +118,8 @@
         if (sGifts) gifts = JSON.parse(sGifts);
         updateGiftDisplay();
 
-        const sBoard = localStorage.getItem("eb_v5_board");
-        const sStats = localStorage.getItem("eb_v5_stats");
+        const sBoard = localStorage.getItem("eb_v6_board");
+        const sStats = localStorage.getItem("eb_v6_stats");
         if (sBoard) rewards = JSON.parse(sBoard); else resetRewards();
         if (sStats) userStats = JSON.parse(sStats);
         
@@ -121,7 +127,6 @@
     }
 
     function toggleSettings() { document.getElementById("settingsPanel").classList.toggle("show"); }
-
     function saveSettings() {
         gifts.g1 = document.getElementById("gift1").value;
         gifts.g2 = document.getElementById("gift2").value;
@@ -129,27 +134,22 @@
         gifts.g4 = document.getElementById("gift4").value;
         localStorage.setItem("eb_gifts", JSON.stringify(gifts));
         updateGiftDisplay();
-        alert("상품명이 업데이트되었습니다!");
         toggleSettings();
-        updateStats(); // 현황판 즉시 갱신
+        updateStats();
     }
 
     function updateGiftDisplay() {
-        document.getElementById("gName1").innerText = gifts.g1;
-        document.getElementById("gName2").innerText = gifts.g2;
-        document.getElementById("gName3").innerText = gifts.g3;
-        document.getElementById("gName4").innerText = gifts.g4;
-        document.getElementById("gift1").value = gifts.g1;
-        document.getElementById("gift2").value = gifts.g2;
-        document.getElementById("gift3").value = gifts.g3;
-        document.getElementById("gift4").value = gifts.g4;
+        document.getElementById("gName1").innerText = gifts.g1; document.getElementById("gName2").innerText = gifts.g2;
+        document.getElementById("gName3").innerText = gifts.g3; document.getElementById("gName4").innerText = gifts.g4;
+        document.getElementById("gift1").value = gifts.g1; document.getElementById("gift2").value = gifts.g2;
+        document.getElementById("gift3").value = gifts.g3; document.getElementById("gift4").value = gifts.g4;
     }
 
     function resetRewards() {
         let temp = [...Array(1).fill(gifts.g1), ...Array(3).fill(gifts.g2), ...Array(15).fill(gifts.g3), ...Array(80).fill(gifts.g4)];
         while (temp.length < TOTAL) temp.push("❌ 꽝");
         rewards = temp.sort(() => Math.random() - 0.5);
-        localStorage.setItem("eb_v5_board", JSON.stringify(rewards));
+        localStorage.setItem("eb_v6_board", JSON.stringify(rewards));
     }
 
     function addUser() {
@@ -158,7 +158,6 @@
     }
 
     function selectUser(name) { activeUser = name; renderUserList(); }
-
     function renderUserList() {
         const list = document.getElementById("userList"); list.innerHTML = "";
         Object.keys(userStats).forEach(name => {
@@ -171,22 +170,17 @@
     function openCell(idx) {
         if (!activeUser) { showPopup("참여자를 선택하세요!", "error"); return; }
         if (rewards[idx].startsWith("O_")) return;
-
         const res = rewards[idx]; rewards[idx] = "O_" + res; userStats[activeUser]++;
-        saveAll();
-        addLog(activeUser, idx+1, res);
-
+        saveAll(); addLog(activeUser, idx+1, res);
         if (!res.includes("꽝")) {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             showPopup(res + "! 🎉", "win");
         } else showPopup("꽝!", "miss");
-
         renderBoard(); updateLeaderboard(); updateStats();
     }
 
     function addLog(user, num, res) {
-        const box = document.getElementById("logBox");
-        const entry = document.createElement("div");
+        const box = document.getElementById("logBox"); const entry = document.createElement("div");
         entry.innerHTML = `<span style="color:#666">[${new Date().toLocaleTimeString()}]</span> <b>${user}</b>님 ${num}번 👉 ${res}`;
         box.prepend(entry);
     }
@@ -218,7 +212,8 @@
             const div = document.createElement("div"); div.className = "cell";
             if (res.startsWith("O_")) {
                 div.classList.add("open"); const val = res.replace("O_", "");
-                div.innerText = val.includes("꽝") ? "꽝" : val; div.classList.add(val.includes("꽝") ? "miss-text" : "win-text");
+                div.innerText = val.includes("꽝") ? "꽝" : val.split(" ")[1] || val;
+                div.classList.add(val.includes("꽝") ? "miss-text" : "win-text");
             } else { div.innerText = i + 1; div.onclick = () => openCell(i); }
             board.appendChild(div);
         });
@@ -227,19 +222,18 @@
     function updateLeaderboard() {
         const b = document.getElementById("leaderboard"); b.innerHTML = "";
         Object.entries(userStats).sort((a,b)=>b[1]-a[1]).slice(0,5).forEach((item, i) => {
-            const d = document.createElement("div"); d.style.cssText = "display:flex; justify-content:space-between; font-size:12px; padding:5px 0; border-bottom:1px solid #222;";
+            const d = document.createElement("div"); d.style.cssText = "display:flex; justify-content:space-between; font-size:11px; padding:4px 0; border-bottom:1px solid #222;";
             d.innerHTML = `<span style="color:var(--gold)">${i+1}위</span> <span>${item[0]}</span> <span>${item[1]}회</span>`;
             b.appendChild(d);
         });
     }
 
     function manualPick() { const v = parseInt(document.getElementById("targetNum").value); if (v>=1 && v<=TOTAL) openCell(v-1); document.getElementById("targetNum").value=""; }
-    function saveAll() { localStorage.setItem("eb_v5_board", JSON.stringify(rewards)); localStorage.setItem("eb_v5_stats", JSON.stringify(userStats)); }
+    function saveAll() { localStorage.setItem("eb_v6_board", JSON.stringify(rewards)); localStorage.setItem("eb_v6_stats", JSON.stringify(userStats)); }
     function resetBoard() { if(confirm("판을 초기화할까요?")) { resetRewards(); location.reload(); } }
     function showPopup(m, t) {
         const o = document.getElementById("effectOverlay"); o.innerText = m;
-        o.className = t;
-        o.style.cssText = t==="win"?"position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); background:rgba(0,0,0,0.9); border:4px solid var(--gold); color:var(--gold); font-size:40px; padding:40px; border-radius:20px; z-index:9999;":"position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); background:rgba(0,0,0,0.8); border:2px solid #555; color:#ccc; font-size:30px; padding:40px; border-radius:20px; z-index:9999;";
+        o.style.cssText = t==="win"?"position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); background:rgba(0,0,0,0.9); border:4px solid var(--gold); color:var(--gold); font-size:40px; padding:40px; border-radius:20px; z-index:9999; transition:0.3s;":"position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); background:rgba(0,0,0,0.8); border:2px solid #555; color:#ccc; font-size:30px; padding:40px; border-radius:20px; z-index:9999; transition:0.3s;";
         setTimeout(() => o.style.transform = "translate(-50%,-50%) scale(0)", 1500);
     }
     init();
